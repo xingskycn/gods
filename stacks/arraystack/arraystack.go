@@ -1,105 +1,91 @@
-/*
-Copyright (c) Emir Pasic, All rights reserved.
+// Copyright (c) 2015, Emir Pasic. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
 
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public
-License as published by the Free Software Foundation; either
-version 3.0 of the License, or (at your option) any later version.
-
-This library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public
-License along with this library. See the file LICENSE included
-with this distribution for more information.
-*/
-
-// Implementation of stack using a slice.
+// Package arraystack implements a stack backed by array list.
+//
 // Structure is not thread safe.
-// References: http://en.wikipedia.org/wiki/Stack_%28abstract_data_type%29
-
+//
+// Reference: https://en.wikipedia.org/wiki/Stack_%28abstract_data_type%29#Array
 package arraystack
 
 import (
 	"fmt"
+	"github.com/emirpasic/gods/lists/arraylist"
 	"github.com/emirpasic/gods/stacks"
 	"strings"
 )
 
-func assertInterfaceImplementation() {
-	var _ stacks.Interface = (*Stack)(nil)
+func assertStackImplementation() {
+	var _ stacks.Stack = (*Stack)(nil)
 }
 
+// Stack holds elements in an array-list
 type Stack struct {
-	items []interface{}
-	top   int
+	list *arraylist.List
 }
 
-// Instantiates a new empty stack
+// New instantiates a new empty stack
 func New() *Stack {
-	return &Stack{top: -1}
+	return &Stack{list: arraylist.New()}
 }
 
-// Pushes a value onto the top of the stack
+// Push adds a value onto the top of the stack
 func (stack *Stack) Push(value interface{}) {
-	// Increase when capacity is reached by a factor of 1.5 and add one so it grows when size is zero
-	if stack.top+1 >= cap(stack.items) {
-		currentSize := len(stack.items)
-		sizeIncrease := int(1.5*float32(currentSize) + 1.0)
-		newSize := currentSize + sizeIncrease
-		newItems := make([]interface{}, newSize, newSize)
-		copy(newItems, stack.items)
-		stack.items = newItems
-	}
-	stack.top += 1
-	stack.items[stack.top] = value
+	stack.list.Add(value)
 }
 
-// Pops (removes) top element on stack and returns it, or nil if stack is empty.
+// Pop removes top element on stack and returns it, or nil if stack is empty.
 // Second return parameter is true, unless the stack was empty and there was nothing to pop.
 func (stack *Stack) Pop() (value interface{}, ok bool) {
-	if stack.top >= 0 {
-		value, ok = stack.items[stack.top], true
-		// TODO shrink slice at some point
-		stack.top -= 1
-		return
-	}
-	return nil, false
+	value, ok = stack.list.Get(stack.list.Size() - 1)
+	stack.list.Remove(stack.list.Size() - 1)
+	return
 }
 
-// Returns top element on the stack without removing it, or nil if stack is empty.
+// Peek returns top element on the stack without removing it, or nil if stack is empty.
 // Second return parameter is true, unless the stack was empty and there was nothing to peek.
 func (stack *Stack) Peek() (value interface{}, ok bool) {
-	if stack.top >= 0 {
-		return stack.items[stack.top], true
-	}
-	return nil, false
+	return stack.list.Get(stack.list.Size() - 1)
 }
 
-// Returns true if stack does not contain any elements.
+// Empty returns true if stack does not contain any elements.
 func (stack *Stack) Empty() bool {
-	return stack.Size() == 0
+	return stack.list.Empty()
 }
 
-// Returns number of elements within the stack.
+// Size returns number of elements within the stack.
 func (stack *Stack) Size() int {
-	return stack.top + 1
+	return stack.list.Size()
 }
 
-// Removes all elements from the stack.
+// Clear removes all elements from the stack.
 func (stack *Stack) Clear() {
-	stack.top = -1
-	stack.items = []interface{}{}
+	stack.list.Clear()
 }
 
+// Values returns all elements in the stack (LIFO order).
+func (stack *Stack) Values() []interface{} {
+	size := stack.list.Size()
+	elements := make([]interface{}, size, size)
+	for i := 1; i <= size; i++ {
+		elements[size-i], _ = stack.list.Get(i - 1) // in reverse (LIFO)
+	}
+	return elements
+}
+
+// String returns a string representation of container
 func (stack *Stack) String() string {
 	str := "ArrayStack\n"
 	values := []string{}
-	for _, value := range stack.items {
+	for _, value := range stack.list.Values() {
 		values = append(values, fmt.Sprintf("%v", value))
 	}
 	str += strings.Join(values, ", ")
 	return str
+}
+
+// Check that the index is within bounds of the list
+func (stack *Stack) withinRange(index int) bool {
+	return index >= 0 && index < stack.list.Size()
 }

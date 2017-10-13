@@ -1,83 +1,242 @@
-/*
-Copyright (c) Emir Pasic, All rights reserved.
-
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public
-License as published by the Free Software Foundation; either
-version 3.0 of the License, or (at your option) any later version.
-
-This library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public
-License along with this library. See the file LICENSE included
-with this distribution for more information.
-*/
+// Copyright (c) 2015, Emir Pasic. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
 
 package hashset
 
 import (
-	"fmt"
 	"testing"
 )
 
-func TestHashSet(t *testing.T) {
-
+func TestSetAdd(t *testing.T) {
 	set := New()
-
-	// insertions
 	set.Add()
 	set.Add(1)
 	set.Add(2)
 	set.Add(2, 3)
 	set.Add()
-
 	if actualValue := set.Empty(); actualValue != false {
 		t.Errorf("Got %v expected %v", actualValue, false)
 	}
-
 	if actualValue := set.Size(); actualValue != 3 {
 		t.Errorf("Got %v expected %v", actualValue, 3)
 	}
+}
 
-	// Asking if a set is superset of nothing, thus it's true
+func TestSetContains(t *testing.T) {
+	set := New()
+	set.Add(3, 1, 2)
+	set.Add(2, 3)
+	set.Add()
 	if actualValue := set.Contains(); actualValue != true {
 		t.Errorf("Got %v expected %v", actualValue, true)
 	}
-
 	if actualValue := set.Contains(1); actualValue != true {
 		t.Errorf("Got %v expected %v", actualValue, true)
 	}
-
 	if actualValue := set.Contains(1, 2, 3); actualValue != true {
 		t.Errorf("Got %v expected %v", actualValue, true)
 	}
-
 	if actualValue := set.Contains(1, 2, 3, 4); actualValue != false {
 		t.Errorf("Got %v expected %v", actualValue, false)
 	}
+}
 
+func TestSetRemove(t *testing.T) {
+	set := New()
+	set.Add(3, 1, 2)
 	set.Remove()
+	if actualValue := set.Size(); actualValue != 3 {
+		t.Errorf("Got %v expected %v", actualValue, 3)
+	}
 	set.Remove(1)
+	if actualValue := set.Size(); actualValue != 2 {
+		t.Errorf("Got %v expected %v", actualValue, 2)
+	}
+	set.Remove(3)
+	set.Remove(3)
+	set.Remove()
+	set.Remove(2)
+	if actualValue := set.Size(); actualValue != 0 {
+		t.Errorf("Got %v expected %v", actualValue, 0)
+	}
+}
 
-	if actualValue, expactedValues := fmt.Sprintf("%d%d", set.Values()...), [2]string{"23", "32"}; actualValue != expactedValues[0] && actualValue != expactedValues[1] {
-		t.Errorf("Got %v expected %v", actualValue, expactedValues)
+func TestSetSerialization(t *testing.T) {
+	set := New()
+	set.Add("a", "b", "c")
+
+	var err error
+	assert := func() {
+		if actualValue, expectedValue := set.Size(), 3; actualValue != expectedValue {
+			t.Errorf("Got %v expected %v", actualValue, expectedValue)
+		}
+		if actualValue := set.Contains("a", "b", "c"); actualValue != true {
+			t.Errorf("Got %v expected %v", actualValue, true)
+		}
+		if err != nil {
+			t.Errorf("Got error %v", err)
+		}
 	}
 
-	if actualValue := set.Contains(1); actualValue != false {
-		t.Errorf("Got %v expected %v", actualValue, false)
+	assert()
+
+	json, err := set.ToJSON()
+	assert()
+
+	err = set.FromJSON(json)
+	assert()
+}
+
+func benchmarkContains(b *testing.B, set *Set, size int) {
+	for i := 0; i < b.N; i++ {
+		for n := 0; n < size; n++ {
+			set.Contains(n)
+		}
 	}
+}
 
-	set.Remove(1, 2, 3)
-
-	if actualValue := set.Contains(3); actualValue != false {
-		t.Errorf("Got %v expected %v", actualValue, false)
+func benchmarkAdd(b *testing.B, set *Set, size int) {
+	for i := 0; i < b.N; i++ {
+		for n := 0; n < size; n++ {
+			set.Add(n)
+		}
 	}
+}
 
-	if actualValue := set.Empty(); actualValue != true {
-		t.Errorf("Got %v expected %v", actualValue, true)
+func benchmarkRemove(b *testing.B, set *Set, size int) {
+	for i := 0; i < b.N; i++ {
+		for n := 0; n < size; n++ {
+			set.Remove(n)
+		}
 	}
+}
 
+func BenchmarkHashSetContains100(b *testing.B) {
+	b.StopTimer()
+	size := 100
+	set := New()
+	for n := 0; n < size; n++ {
+		set.Add(n)
+	}
+	b.StartTimer()
+	benchmarkContains(b, set, size)
+}
+
+func BenchmarkHashSetContains1000(b *testing.B) {
+	b.StopTimer()
+	size := 1000
+	set := New()
+	for n := 0; n < size; n++ {
+		set.Add(n)
+	}
+	b.StartTimer()
+	benchmarkContains(b, set, size)
+}
+
+func BenchmarkHashSetContains10000(b *testing.B) {
+	b.StopTimer()
+	size := 10000
+	set := New()
+	for n := 0; n < size; n++ {
+		set.Add(n)
+	}
+	b.StartTimer()
+	benchmarkContains(b, set, size)
+}
+
+func BenchmarkHashSetContains100000(b *testing.B) {
+	b.StopTimer()
+	size := 100000
+	set := New()
+	for n := 0; n < size; n++ {
+		set.Add(n)
+	}
+	b.StartTimer()
+	benchmarkContains(b, set, size)
+}
+
+func BenchmarkHashSetAdd100(b *testing.B) {
+	b.StopTimer()
+	size := 100
+	set := New()
+	b.StartTimer()
+	benchmarkAdd(b, set, size)
+}
+
+func BenchmarkHashSetAdd1000(b *testing.B) {
+	b.StopTimer()
+	size := 1000
+	set := New()
+	for n := 0; n < size; n++ {
+		set.Add(n)
+	}
+	b.StartTimer()
+	benchmarkAdd(b, set, size)
+}
+
+func BenchmarkHashSetAdd10000(b *testing.B) {
+	b.StopTimer()
+	size := 10000
+	set := New()
+	for n := 0; n < size; n++ {
+		set.Add(n)
+	}
+	b.StartTimer()
+	benchmarkAdd(b, set, size)
+}
+
+func BenchmarkHashSetAdd100000(b *testing.B) {
+	b.StopTimer()
+	size := 100000
+	set := New()
+	for n := 0; n < size; n++ {
+		set.Add(n)
+	}
+	b.StartTimer()
+	benchmarkAdd(b, set, size)
+}
+
+func BenchmarkHashSetRemove100(b *testing.B) {
+	b.StopTimer()
+	size := 100
+	set := New()
+	for n := 0; n < size; n++ {
+		set.Add(n)
+	}
+	b.StartTimer()
+	benchmarkRemove(b, set, size)
+}
+
+func BenchmarkHashSetRemove1000(b *testing.B) {
+	b.StopTimer()
+	size := 1000
+	set := New()
+	for n := 0; n < size; n++ {
+		set.Add(n)
+	}
+	b.StartTimer()
+	benchmarkRemove(b, set, size)
+}
+
+func BenchmarkHashSetRemove10000(b *testing.B) {
+	b.StopTimer()
+	size := 10000
+	set := New()
+	for n := 0; n < size; n++ {
+		set.Add(n)
+	}
+	b.StartTimer()
+	benchmarkRemove(b, set, size)
+}
+
+func BenchmarkHashSetRemove100000(b *testing.B) {
+	b.StopTimer()
+	size := 100000
+	set := New()
+	for n := 0; n < size; n++ {
+		set.Add(n)
+	}
+	b.StartTimer()
+	benchmarkRemove(b, set, size)
 }

@@ -1,8 +1,13 @@
+// Copyright (c) 2015, Emir Pasic. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 package examples
 
 import "github.com/emirpasic/gods/maps/hashmap"
 
-func hashmapExample() {
+// HashMapExample to demonstrate basic usage of HashMap
+func HashMapExample() {
 	m := hashmap.New() // empty
 	m.Put(1, "x")      // 1->x
 	m.Put(2, "b")      // 2->b, 1->x  (random order)

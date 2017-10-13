@@ -1,8 +1,13 @@
+// Copyright (c) 2015, Emir Pasic. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 package examples
 
 import "github.com/emirpasic/gods/sets/hashset"
 
-func hashsetExample() {
+// HashSetExample to demonstrate basic usage of HashSet
+func HashSetExample() {
 	set := hashset.New()   // empty (keys are of type int)
 	set.Add(1)             // 1
 	set.Add(2, 2, 3, 4, 5) // 3, 1, 2, 4, 5 (random order, duplicates ignored)

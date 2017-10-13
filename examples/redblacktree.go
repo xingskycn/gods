@@ -1,3 +1,7 @@
+// Copyright (c) 2015, Emir Pasic. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 package examples
 
 import (
@@ -5,7 +9,8 @@ import (
 	rbt "github.com/emirpasic/gods/trees/redblacktree"
 )
 
-func redblacktreeExample() {
+// RedBlackTreeExample to demonstrate basic usage of RedBlackTree
+func RedBlackTreeExample() {
 	tree := rbt.NewWithIntComparator() // empty(keys are of type int)
 
 	tree.Put(1, "x") // 1->x
@@ -20,11 +25,11 @@ func redblacktreeExample() {
 	//
 	//  RedBlackTree
 	//  │           ┌── 6
-	//	│       ┌── 5
-	//	│   ┌── 4
-	//	│   │   └── 3
-	//	└── 2
-	//		└── 1
+	//  │       ┌── 5
+	//  │   ┌── 4
+	//  │   │   └── 3
+	//  └── 2
+	//       └── 1
 
 	_ = tree.Values() // []interface {}{"a", "b", "c", "d", "e", "f"} (in order)
 	_ = tree.Keys()   // []interface {}{1, 2, 3, 4, 5, 6} (in order)

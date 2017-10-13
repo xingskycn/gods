@@ -1,3 +1,7 @@
+// Copyright (c) 2015, Emir Pasic. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 package examples
 
 import (
@@ -5,6 +9,7 @@ import (
 	"github.com/emirpasic/gods/sets/treeset"
 )
 
+// User model (id and name)
 type User struct {
 	id   int
 	name string
@@ -27,7 +32,8 @@ func byID(a, b interface{}) int {
 	}
 }
 
-func exampleCustomComparator() {
+// CustomComparatorExample to demonstrate basic usage of CustomComparator
+func CustomComparatorExample() {
 	set := treeset.NewWith(byID)
 
 	set.Add(User{2, "Second"})
